@@ -1,5 +1,8 @@
 PFont font;
-String ASCIIStr = " !\"#$%&\'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÇüâäàåçêëèïîìÅÄÉæÆôöòÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»░▒▓│┤ÁÂÀ©╣║╗╝¢¥┐└┴┬├─┼ãÃ╚╔╩╦═╬¤ðÐÊËÈıÍÏÎ┘┌█▄¦Ì▀ÓßÔÒõÕµþÞÚÛÙýÝ¯´≡±‗¾¶§÷¸°·¹³²■";
+//String ASCIIStr = " !\"#$%&\'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÇüâäàåçêëèïîìÅÄÉæÆôöòÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»░▒▓│┤ÁÂÀ©╣║╗╝¢¥┐└┴┬├─┼ãÃ╚╔╩╦═╬¤ðÐÊËÈıÍÏÎ┘┌█▄¦Ì▀ÓßÔÒõÕµþÞÚÛÙýÝ¯´≡±‗¾¶§÷¸°·¹³²■";
+String ASCIIStr = " !\"#$%&\'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÇüâäàåçêëèïîìÅÄÉæÆôöòÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»│┤ÁÂÀ©╣║╗╝¢¥┐└┴┬├─┼ãÃ╚╔╩╦═╬¤ðÐÊËÈıÍÏÎ┘┌¦ÌÓßÔÒõÕµþÞÚÛÙýÝ¯´≡±‗¾¶§÷¸°·¹³²";
+
+boolean rgb = false;
 char[] ASCII = ASCIIStr.toCharArray();
 PImage[] ASCIIImgs = new PImage[ASCII.length];
 PImage img;
@@ -10,7 +13,7 @@ void settings(){
 
 void setup(){
   //surface.setResizable(true);
-  font = createFont("Menlo", 20, true); // Currently must be monospace
+  font = createFont("Menlo", 12, true); // Currently must be monospace
   selectInput("Choose a file to ASCII:", "saveFile");
   img = createImage(100, 100, RGB);
   background(51);
@@ -64,9 +67,10 @@ void ASCIIify(PImage inp){
   if (nH > 1){
     hMargin = (inp.height % h)/(nH-1);
   }
-  
+  String ASCIIResultR = "";
+  String ASCIIResultG = "";
+  String ASCIIResultB = "";
   String ASCIIResult = "";
-  
   for (int j = 0; j < nH; j++){
     int y = (h+hMargin)*j;
     for (int i = 0; i < nW; i++){
@@ -84,11 +88,82 @@ void ASCIIify(PImage inp){
         bestError = error;
         best = ASCII[k];
       }
+      char bestR = ' ';
+      char bestG = ' ';
+      char bestB = ' ';
+      if (rgb){
+        
+        //Red
+        
+        bestR = ' ';
+        int bestErrorR= -1;
+        containingLoop: for (int k = 0; k < ASCII.length; k++){
+          int error = 0;
+          for (int pX = 0; pX < w; pX++){
+            for (int pY = 0; pY < h; pY++){
+              error+=abs(red(inp.get(x+pX, y+pY))-red(ASCIIImgs[k].get(pX, pY)));
+              if (bestErrorR != -1 && error >= bestErrorR) continue containingLoop;
+            }
+          }
+          bestErrorR = error;
+          bestR = ASCII[k];
+        }
+        
+        //Green
+        
+        bestG = ' ';
+        int bestErrorG= -1;
+        containingLoop: for (int k = 0; k < ASCII.length; k++){
+          int error = 0;
+          for (int pX = 0; pX < w; pX++){
+            for (int pY = 0; pY < h; pY++){
+              error+=abs(green(inp.get(x+pX, y+pY))-green(ASCIIImgs[k].get(pX, pY)));
+              if (bestErrorG != -1 && error >= bestErrorG) continue containingLoop;
+            }
+          }
+          bestErrorG = error;
+          bestG = ASCII[k];
+        }
+        
+        //Blue
+        
+        bestB = ' ';
+        int bestErrorB= -1;
+        containingLoop: for (int k = 0; k < ASCII.length; k++){
+          int error = 0;
+          for (int pX = 0; pX < w; pX++){
+            for (int pY = 0; pY < h; pY++){
+              error+=abs(blue(inp.get(x+pX, y+pY))-blue(ASCIIImgs[k].get(pX, pY)));
+              if (bestErrorB != -1 && error >= bestErrorB) continue containingLoop;
+            }
+          }
+          bestErrorB = error;
+          bestB = ASCII[k];
+        }
+      }
+      
       ASCIIResult += best;
-      println(str(((float) (j+i*nH))/((float) (nH+(nW-1)*nH-1))*100)+"% Done ("+str(j+i*nH)+"/"+str(nH+(nW-1)*nH-1)+")");
+      
+      if (rgb){
+        ASCIIResultR += bestR;
+        ASCIIResultG += bestG;
+        ASCIIResultB += bestB;
+      }
+      println(str(((float) (i+j*nW))/((float) (nW+(nH-1)*nW-1))*100)+"% Done ("+str(i+j*nW)+"/"+str(nW+(nH-1)*nW-1)+")");
     }
     ASCIIResult += '\n';
+    if (rgb){
+      ASCIIResultR += '\n';
+      ASCIIResultG += '\n';
+      ASCIIResultB += '\n';
+    }
   }
   
-  saveStrings("Result.txt", ASCIIResult.split("/n"));
+  saveStrings("Result2.txt" , ASCIIResult .split("/n"));
+  if (rgb){
+    saveStrings("ResultR.txt", ASCIIResultR.split("/n"));
+    saveStrings("ResultG.txt", ASCIIResultG.split("/n"));
+    saveStrings("ResultB.txt", ASCIIResultB.split("/n"));
+  }
+  exit();
 }
